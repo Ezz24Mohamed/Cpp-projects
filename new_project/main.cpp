@@ -30,7 +30,7 @@ int menu() {
         cout << "3) Get next patient" << endl;
         cout << "4) Exit" << endl;
         cin >> choice;
-        if (!(1 <= choice && choice <= 4)) {
+        if (!( choice>=1 && choice <= 4)) {
             cout << "Invalid number ,Please renter" << endl;
             choice = -1;
         }
