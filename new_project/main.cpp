@@ -17,125 +17,146 @@ void fast() {
 const int MAX_SPECIALIZATION_LEN = 20;
 const int MAX_QUEUE_LEN = 5;
 
-string names[MAX_SPECIALIZATION_LEN][MAX_QUEUE_LEN];//name of patient and number of its queue in each specialization
-int status[MAX_SPECIALIZATION_LEN][MAX_QUEUE_LEN];//status => regular or urgent
-int cnt_queue[MAX_SPECIALIZATION_LEN];//to know queue length for each specialization
+struct hospital_queue {
+    int spec{};
+    int len{};
+    int status[MAX_QUEUE_LEN]{};
+    string names[MAX_QUEUE_LEN];
 
-int menu() {
-    int choice = -1;
-    while (choice == -1) {
-        cout << "Enter your choice: " << endl;
-        cout << "1) Add patient " << endl;
-        cout << "2) Print patient " << endl;
-        cout << "3) Get next patient " << endl;
-        cout << "4) Exit " << endl;
-        cin >> choice;
-        if (!(choice >= 1 && choice <= 4)) {
-            cout << "Invalid input ,please renter" << endl;
-            choice = -1;
+    hospital_queue() {
+        len = 0;
+        spec = -1;
+    }
+
+    hospital_queue(int spec) {
+        len = 0;
+        this->spec = spec;
+    }
+
+    void add_end(string name, int st) {
+        names[len] = name;
+        status[len] = st;
+        len++;
+    }
+
+    void add_front(string name,int st) {
+        for (int i = len - 1; i >= 0; --i) {
+            names[i + 1] = names[i];
+            status[i + 1] = status[i];
         }
-    }
-    return choice;
-}
-
-void add_in_begin(int spec, string name[], int st[]) {
-    int size = cnt_queue[spec];
-    for (int i = size - 1; i >= 0; --i) {
-        name[i + 1] = name[i];
-        st[i + 1] = st[i];
-    }
-    cnt_queue[spec]++;
-}
-void remove_from_begin(int spec,string name[],int st[]){
-    //remove from the beginning of the queue ,so we shift left
-    int size=cnt_queue[spec];
-    for (int i = 1; i <size ; ++i) {
-        name[i-1]=name[i];
-        st[i-1]=st[i];
-    }
-    cnt_queue[spec]--;
-}
-
-void add_patient() {
-    string name;
-    int spec;
-    int st;
-    cout << "Enter specialization,name,status: ";
-    cin >> spec >> name >> st;
-    int pos = cnt_queue[spec];
-    if (pos >= MAX_QUEUE_LEN) {
-        cout << "no more queues , please wait" << endl;
-        return ;
-    }
-    if (st == 0) {
-        names[spec][pos] = name;
-        status[spec][pos] = st;
-        cnt_queue[spec]++;
-    } else {
-        add_in_begin(spec, names[spec], status[spec]);
-        names[spec][0] = name;
-        status[spec][0] = st;
+        names[0]=name;
+        status[0]=st;
+        len++;
     }
 
-}
-
-void print_one_patient(int spec, string name[], int st[]) {
-    int size = cnt_queue[spec];
-    if (size == 0) {
-        return;
+    void remove_front() {
+        if (!len) {
+            cout << "There are no patients at this moment.Have rest,dr" << endl;
+            return;
+        }
+        cout << names[0] <<" please,go with dr" << endl;
+        for (int i = 1; i < len; ++i) {
+            names[i - 1] = names[i];
+            status[i - 1] = status[i];
+        }
+        len--;
     }
-    cout << "There are " << size << " patients in specialization " << spec << endl;
-    for (int i = 0; i < size; ++i) {
-        cout << name[i] << " ";
-        if (st[i] == 0) {
-            cout << "regular" << endl;
+
+    void print_queue() {
+        if (!len) {
+            return;
+        }
+        cout << "There are " << len << " in specialization: " << spec << endl;
+        for (int i = 0; i < len; ++i) {
+            cout << names[i] << " ";
+            if (status[i] == 0) {
+                cout << "regular" << endl;
+            } else {
+                cout << "urgent" << endl;
+            }
+        }
+        cout << endl;
+    }
+};
+
+struct hospital_system {
+    hospital_queue queues[MAX_SPECIALIZATION_LEN];
+
+    hospital_system() {
+        for (int i = 0; i < MAX_SPECIALIZATION_LEN; ++i) {
+            queues[i] = hospital_queue(i);
+        }
+
+    }
+
+    void add_patient() {
+        int spec, st;
+        string name;
+        cout << "Enter specialization,name,status: ";
+        cin >> spec >> name >> st;
+        cout<<endl;
+        if (queues[spec].len >= MAX_QUEUE_LEN) {
+            cout << "Sorry,there are no more queues" << endl;
+            return;
+        }
+        if (st == 0) {
+            queues[spec].add_end(name, st);
         } else {
-            cout << "urgent " << endl;
-        }
-    }
-    cout << endl;
-}
+            queues[spec].add_front(name,st);
 
-void print_patients() {
-    //iterate all specializations
-    cout << "**************************************" << endl;
-    for (int spec = 0; spec < MAX_SPECIALIZATION_LEN; ++spec) {
-        print_one_patient(spec, names[spec], status[spec]);
+        }
     }
-}
-void get_next_patient(){
-    cout<<"Enter specialization: ";
-    int spec;
-    cin>>spec;
-    int size=cnt_queue[spec];
-    if(size==0){
-        cout<<"No patients at this moment "<<endl;
-    }
-    else{
-        cout<<endl<<names[spec][0]<<" your turn "<<endl;
-        remove_from_begin(spec,names[spec],status[spec]);
-    }
-}
 
-void hospital_system() {
-    while (true) {
-        int choice = menu();
-        if (choice == 1) {
-            add_patient();
-        } else if (choice == 2) {
-            print_patients();
-        }
-        else if (choice==3){
-            get_next_patient();
-        }
-        else {
-            break;
+    void print_patients() {
+        cout << "***********************" << endl;
+        for (int spec = 0; spec < MAX_SPECIALIZATION_LEN; ++spec) {
+            queues[spec].print_queue();
         }
     }
-}
+
+    void get_nex_patient() {
+        int spec;
+        cout << "Enter specialization: ";
+        cin >> spec;
+        queues[spec].remove_front();
+    }
+
+    int menu() {
+        int choice = -1;
+        while (choice == -1) {
+            cout << "1)Add patient " << endl;
+            cout << "2)Print patients " << endl;
+            cout << "3)Get next patient " << endl;
+            cout << "4)Exit " << endl;
+            cin >> choice;
+            if (!(choice >= 1 && choice <= 4)) {
+                cout << "Invalid input,please renter a valide one" << endl;
+                choice = -1;
+            }
+        }
+        return choice;
+    }
+
+    void run_hos_system() {
+        while (true) {
+            int choice = menu();
+            if (choice == 1) {
+                add_patient();
+            } else if (choice == 2) {
+                print_patients();
+            } else if (choice == 3) {
+                get_nex_patient();
+            } else {
+                cout<<"You terminated the program "<<endl;
+                break;
+            }
+        }
+    }
+};
 
 int main() {
-    hospital_system();
+    hospital_system hospital = hospital_system();
+    hospital.run_hos_system();
 
     return 0;
 }
