@@ -40,6 +40,7 @@ struct hospital_queue {
     }
 
     void add_front(string name,int st) {
+        //shift the array right
         for (int i = len - 1; i >= 0; --i) {
             names[i + 1] = names[i];
             status[i + 1] = status[i];
@@ -50,6 +51,7 @@ struct hospital_queue {
     }
 
     void remove_front() {
+        //shift the array left
         if (!len) {
             cout << "There are no patients at this moment.Have rest,dr" << endl;
             return;
@@ -81,14 +83,12 @@ struct hospital_queue {
 
 struct hospital_system {
     hospital_queue queues[MAX_SPECIALIZATION_LEN];
-
     hospital_system() {
         for (int i = 0; i < MAX_SPECIALIZATION_LEN; ++i) {
             queues[i] = hospital_queue(i);
         }
 
     }
-
     void add_patient() {
         int spec, st;
         string name;
@@ -142,6 +142,7 @@ struct hospital_system {
             int choice = menu();
             if (choice == 1) {
                 add_patient();
+
             } else if (choice == 2) {
                 print_patients();
             } else if (choice == 3) {
